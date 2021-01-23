@@ -1,0 +1,23 @@
+[
+  {
+    "LocalObservationDateTime": "2021-01-22T09:46:00+01:00",
+    "EpochTime": 1611305160,
+    "WeatherText": "Mostly cloudy",
+    "WeatherIcon": 6,
+    "HasPrecipitation": false,
+    "PrecipitationType": null,
+    "IsDayTime": true,
+    "Temperature": {
+      "Metric": {
+        "Value": 23.9,
+        "Unit": "C",
+        "UnitType": 17
+      },
+      "Imperial": {
+        "Value": 39,
+        "Unit": "F",
+        "UnitType": 18
+      }
+    }
+  }
+]

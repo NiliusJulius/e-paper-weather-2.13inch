@@ -1,0 +1,42 @@
+{
+  "Headline": {
+    "EffectiveDate": "2021-01-24T19:00:00+01:00",
+    "EffectiveEpochDate": 1611511200,
+    "Severity": 4,
+    "Text": "Snowfall Sunday evening will total a coating to 1 cm",
+    "Category": "snow",
+    "EndDate": "2021-01-25T01:00:00+01:00",
+    "EndEpochDate": 1611532800
+  },
+  "DailyForecasts": [
+    {
+      "Date": "2021-01-22T07:00:00+01:00",
+      "EpochDate": 1611295200,
+      "Temperature": {
+        "Minimum": {
+          "Value": 1.8,
+          "Unit": "C",
+          "UnitType": 17
+        },
+        "Maximum": {
+          "Value": 27.2,
+          "Unit": "C",
+          "UnitType": 17
+        }
+      },
+      "Day": {
+        "Icon": 4,
+        "IconPhrase": "Intermittent clouds",
+        "HasPrecipitation": false
+      },
+      "Night": {
+        "Icon": 38,
+        "IconPhrase": "Mostly cloudy",
+        "HasPrecipitation": false
+      },
+      "Sources": [
+        "AccuWeather"
+      ]
+    }
+  ]
+}

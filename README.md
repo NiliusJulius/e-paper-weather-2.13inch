@@ -3,8 +3,8 @@
 # 2.13 inch e-paper weather application
 A python application to show the weather on a Waveshare 2.13 inch e-paper three color (black, white, red/yellow) module connected to a raspberry pi.
 
-This program interacts with the [accuweather API](https://developer.accuweather.com/) in order to retriever weather data.
-It collects the current weather and the forecast for tomorrow every hour. This means it makes 48 API calls a day, and the free tier allows for 50 calls a day.
+This program interacts with the [accuweather API](https://developer.accuweather.com/), or the [openweathermap API](https://openweathermap.org/api) in order to retriever weather data.
+It collects the current weather and the forecast for tomorrow (every hour for accuweather and every 15 minutes otherwise). This means it will work with the free plan of the supported APIs.
 
 ## Setup
 
@@ -22,10 +22,19 @@ git clone https://github.com/NiliusJulius/e-paper-weather-2.13inch.git
 pip install -r requirements.txt
 ```
 
-### Set config file
-In the config.json file are 2 properties which you need to fill.
-Create an account on [accuweather](https://developer.accuweather.com/), a free one will do just fine.
-Place your API key in the config file and use their locations API to find your location key (for example by [searching for a city](https://developer.accuweather.com/accuweather-locations-api/apis/get/locations/v1/cities/search))
+### Set config file and other configuration
+In the config.json file are 2 properties which you need to fill for the API you plan on using.
+Create an account on [accuweather](https://developer.accuweather.com/) or [openweathermap](https://openweathermap.org/api), a free one will do just fine.
+Place your API key in the config file.
+For accuweather, use their locations API to find your location key (for example by [searching for a city](https://developer.accuweather.com/accuweather-locations-api/apis/get/locations/v1/cities/search)).
+For openweathermap, you need to find your lat, long info (for example by looking it up in Google Maps).
+
+In main.py, you will find something like this
+```python
+weatherAPIList = ["accuWeather", "openWeatherMap"]
+weatherAPI = weatherAPIList[1]
+```
+Change the number to the corresponding number of the API you want to use. In this case we are using openWeatherMap.
 
 ## Test 
 In order to test  whether the program is working, it can be configured to not pull from the API, but from a json file.

@@ -1,4 +1,14 @@
 {
-  "accuWeatherAPIKey": "",
-  "locationKey": ""
+  "API": {
+    "use": "openWeatherMap",
+    "accuWeather": {
+      "APIKey": "",
+      "locationKey": ""
+    },
+    "openWeatherMap": {
+      "APIKey": "",
+      "lat": 1,
+      "lon": 1
+    }
+  }
 }

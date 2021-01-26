@@ -10,18 +10,18 @@ from lib.waveshare_epd import epd2in13b_V3
 
 sys.path.append(os.path.dirname(__file__))
 
+weatherAPIList = ["accuWeather", "openWeatherMap"]
+weatherAPI = weatherAPIList[1]
+
 debugMode = 0
 useWeatherAPI = 1
 
-logging.basicConfig(filename="e-paper-weather.log", level=logging.DEBUG)
+logging.basicConfig(filename="e-paper-weather.log", level=logging.DEBUG, format='%(process)d-%(levelname)s-%(message)s')
 logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
 # Read config file
 with open("config.json", "r") as config_file:
     config = json.load(config_file)
-
-WEATHER_API_KEY = config["accuWeatherAPIKey"]
-LOCATION_KEY = config["locationKey"]
 
 # Initiate the e-paper driver
 epd = epd2in13b_V3.EPD()
@@ -29,48 +29,19 @@ epd = epd2in13b_V3.EPD()
 screenHeight = epd.width
 screenWidth = epd.height
 
-# The accuweather API free plan allowed 50 calls a day.
-# Since we make 2 calls every time (one for current weather and on for forecast,
-# we can use a refresh time of once an hour, which makes 48 calls a day.
-refreshTime = 3600
+# Refresh time
+if weatherAPI == weatherAPIList[0]:
+    refreshTime = 60 * 60
+else:
+    refreshTime = 60 * 15
 
-icons_list = {1: 'B', 2: 'H', 3: 'H', 4: 'H', 5: 'J', 6: 'N', 7: 'Y', 8: 'Y', 11: 'M', 12: 'Q', 13: 'Q', 14: 'Q',
-              15: 'P', 16: 'P', 17: 'P', 18: 'R', 19: 'U', 20: 'U', 21: 'U', 22: 'W', 23: 'W', 24: 'W', 25: 'W',
-              26: 'X', 29: 'X', 30: '\'', 31: '\'', 32: 'F', 33: 'C', 34: 'I', 35: 'I', 36: 'I', 37: 'K', 38: 'N',
-              39: 'Q', 40: 'Q', 41: 'P', 42: 'P', 43: 'U', 44: 'U'}
-
-
-def snoopy():
-    try:
-        logging.info("Starting main")
-
-        image_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "pic")
-
-        logging.info("Init and Clear")
-        epd.init()
-        epd.Clear()
-        time.sleep(1)
-
-        logging.info("Read bmp file on window")
-        black_image1 = Image.new('1', (screenWidth, screenHeight), 255)
-        red_image1 = Image.new('1', (screenWidth, screenHeight), 255)
-        new_image = Image.open(os.path.join(image_dir, "2in13d.bmp"))
-        red_image1.paste(new_image, (0, 0))
-        epd.display(epd.getbuffer(black_image1), epd.getbuffer(red_image1))
-
-        logging.info("Goto Sleep...")
-        epd.sleep()
-        time.sleep(3)
-        logging.info("Done sleeping")
-        epd.Dev_exit()
-
-    except IOError as error:
-        logging.exception(error)
-
-    except KeyboardInterrupt:
-        logging.info("ctrl + c:")
-        epd.Dev_exit()
-        exit()
+icons_list_accu = {1: 'B', 2: 'H', 3: 'H', 4: 'H', 5: 'J', 6: 'N', 7: 'Y', 8: 'Y', 11: 'M', 12: 'Q', 13: 'Q', 14: 'Q',
+                   15: 'P', 16: 'P', 17: 'P', 18: 'R', 19: 'U', 20: 'U', 21: 'U', 22: 'W', 23: 'W', 24: 'W', 25: 'W',
+                   26: 'X', 29: 'X', 30: '\'', 31: '\'', 32: 'F', 33: 'C', 34: 'I', 35: 'I', 36: 'I', 37: 'K', 38: 'N',
+                   39: 'Q', 40: 'Q', 41: 'P', 42: 'P', 43: 'U', 44: 'U'}
+icons_list_owm = {"01d": 'B', "01n": 'C', "02d": 'H', "02n": 'I', "03d": 'N', "03n": 'N', "04d": 'Y', "04n": 'Y',
+                  "09d": 'R', "09n": 'R', "10d": 'R', "10n": 'R', "11d": 'P', "11n": 'P', "13d": 'W', "13n": 'W',
+                  "50d": 'M', "50n": 'M'}
 
 
 def main():
@@ -91,18 +62,37 @@ def call_weather_api():
 
     weather_response = None
     forecast_response = None
+
     try:
         if useWeatherAPI == 1:
-            weather_response = requests.get("http://dataservice.accuweather.com/currentconditions/v1/" + LOCATION_KEY,
-                                            params={"apikey": WEATHER_API_KEY}).json()
-            forecast_response = requests.get("http://dataservice.accuweather.com/forecasts/v1/daily/1day/"
-                                             + LOCATION_KEY,
-                                             params={"apikey": WEATHER_API_KEY, "metric": "true"}).json()
+            api_key = config["API"][weatherAPI]["APIKey"]
+
+            if weatherAPI == weatherAPIList[0]:
+                location_key = config["API"][weatherAPI]["locationKey"]
+
+                weather_response = requests.get("http://dataservice.accuweather.com/currentconditions/v1/"
+                                                + location_key,
+                                                params={"apikey": api_key}).json()
+                forecast_response = requests.get("http://dataservice.accuweather.com/forecasts/v1/daily/1day/"
+                                                 + location_key,
+                                                 params={"apikey": api_key, "metric": "true"}).json()
+            elif weatherAPI == weatherAPIList[1]:
+                lat = config["API"][weatherAPI]["lat"]
+                lon = config["API"][weatherAPI]["lon"]
+
+                weather_response = requests.get("https://api.openweathermap.org/data/2.5/onecall",
+                                                params={"lat": lat, "lon": lon, "exclude": "minutely,hourly,alerts",
+                                                        "units": "metric", "appid": api_key}).json()
         else:
-            with open("json/current.json") as current_json:
-                weather_response = json.load(current_json)
-            with open("json/forecast.json") as forecast_json:
-                forecast_response = json.load(forecast_json)
+            if weatherAPI == weatherAPIList[0]:
+                with open("json/accu_current.json") as current_json:
+                    weather_response = json.load(current_json)
+                with open("json/accu_forecast.json") as forecast_json:
+                    forecast_response = json.load(forecast_json)
+            elif weatherAPI == weatherAPIList[1]:
+                with open("json/openWeatherMap.json") as owm_json:
+                    weather_response = json.load(owm_json)
+
     except Exception as error:
         logging.error("Weather API JSON Failed")
         logging.exception(error)
@@ -132,11 +122,20 @@ def refresh_screen():
 
     # Call the weather API and grab relevant info
     weather_response, forecast_response = call_weather_api()
-    current_icon = weather_response[0]["WeatherIcon"]
-    current_temp = weather_response[0]["Temperature"]["Metric"]["Value"]
-    forecast_icon = forecast_response["DailyForecasts"][0]["Day"]["Icon"]
-    forecast_temp_min = forecast_response["DailyForecasts"][0]["Temperature"]["Minimum"]["Value"]
-    forecast_temp_max = forecast_response["DailyForecasts"][0]["Temperature"]["Maximum"]["Value"]
+    if weatherAPI == weatherAPIList[0]:
+        icons_list = icons_list_accu
+        current_icon = weather_response[0]["WeatherIcon"]
+        current_temp = weather_response[0]["Temperature"]["Metric"]["Value"]
+        forecast_icon = forecast_response["DailyForecasts"][0]["Day"]["Icon"]
+        forecast_temp_min = forecast_response["DailyForecasts"][0]["Temperature"]["Minimum"]["Value"]
+        forecast_temp_max = forecast_response["DailyForecasts"][0]["Temperature"]["Maximum"]["Value"]
+    else:
+        icons_list = icons_list_owm
+        current_icon = weather_response["current"]["weather"][0]["icon"]
+        current_temp = round(weather_response["current"]["temp"], 1)
+        forecast_icon = weather_response["daily"][0]["weather"][0]["icon"]
+        forecast_temp_min = round(weather_response["daily"][0]["temp"]["min"], 1)
+        forecast_temp_max = round(weather_response["daily"][0]["temp"]["max"], 1)
 
     logging.debug("Icons needed: " + str(current_icon) + " and " + str(forecast_icon))
 
@@ -234,7 +233,6 @@ def refresh_screen():
 
 if __name__ == '__main__':
     try:
-        # snoopy()
         main()
 
     except Exception as e:
